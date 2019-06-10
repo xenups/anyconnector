@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import *
 
 app = QApplication(sys.argv)
 
+
 class MyStream(QObject):
     message = pyqtSignal(str)
 
@@ -43,7 +44,7 @@ class MyWindow(QWidget):
 
         if reply == QMessageBox.Yes:
             event.accept()
-            os._exit()
+            os._exit(1)
         else:
             event.ignore()
 
