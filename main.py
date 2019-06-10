@@ -27,6 +27,9 @@ class MyStream(QObject):
 class MyWindow(QWidget):
     def __init__(self, parent=None):
         super(MyWindow, self).__init__(parent)
+        scriptDir = os.path.dirname(os.path.realpath(__file__))
+        self.setWindowIcon(QIcon(scriptDir + os.path.sep + 'icon.png'))
+        self.setWindowTitle("OPEN CONNECT")
 
         self.pushButtonPrint = QPushButton(self)
         self.pushButtonPrint.setText("Sent to tray")
