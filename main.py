@@ -31,13 +31,13 @@ class MyWindow(QWidget):
         self.setWindowIcon(QIcon(scriptDir + os.path.sep + 'icon.png'))
         self.setWindowTitle("OPEN CONNECT")
 
-        self.pushButtonPrint = QPushButton(self)
-        self.pushButtonPrint.setText("Sent to tray")
-        self.pushButtonPrint.clicked.connect(self.on_pushButtonPrint_clicked)
+        self.pushButton = QPushButton(self)
+        self.pushButton.setText("Sent to tray")
+        self.pushButton.clicked.connect(self.on_pushButton_clicked)
         MyWindow.closeEvent = self.closeEvent
         self.textEdit = QTextEdit(self)
         self.layoutVertical = QVBoxLayout(self)
-        self.layoutVertical.addWidget(self.pushButtonPrint)
+        self.layoutVertical.addWidget(self.pushButton)
         self.layoutVertical.addWidget(self.textEdit)
 
     def closeEvent(self, event):
@@ -52,8 +52,7 @@ class MyWindow(QWidget):
             event.ignore()
 
     @pyqtSlot()
-    def on_pushButtonPrint_clicked(self):
-        print
+    def on_pushButton_clicked(self):
         self.hide()
 
     @pyqtSlot(str)
