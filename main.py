@@ -2,7 +2,7 @@ import base64
 import os
 import pickle
 
-import argon2
+from argon2 import *
 from cryptography.fernet import Fernet
 from Kthread import *
 import pexpect
@@ -208,7 +208,7 @@ def connection(address, rootPass, username, password, status):
 def generateKey():
     password = str(get_mac()).encode()
     salt = "connector"
-    password_hash = argon2.argon2_hash(password=password, salt=salt)
+    password_hash = argon2_hash(password=password, salt=salt)
     return base64.urlsafe_b64encode(password_hash[:32])
 
 
