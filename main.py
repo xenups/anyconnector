@@ -35,7 +35,7 @@ class MyWindow(QWidget):
         self.setWindowTitle("OPEN CONNECT")
 
         self.pushButton = QPushButton(self)
-        self.pushButton.setText("Sent to tray")
+        self.pushButton.setText("Send to tray")
         self.pushButton.clicked.connect(self.on_pushButton_clicked)
         MyWindow.closeEvent = self.closeEvent
         self.textEdit = QTextEdit(self)
