@@ -1,12 +1,15 @@
+import base64
 import os
 import pickle
 
+import argon2
 from cryptography.fernet import Fernet
 from Kthread import *
 import pexpect
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from uuid import getnode as get_mac
 
 app = QApplication(sys.argv)
 
@@ -102,8 +105,12 @@ class encryptData():
         cipher_address = cipher_suite.encrypt(bytes(dictionary.get('address'), encoding='utf8'))
         encyrpted.append(cipher_address.decode("utf-8"))
         cipher_rootpassword = cipher_suite.encrypt(bytes(dictionary.get('root_password'), encoding='utf8'))
+
         encyrpted.append(cipher_rootpassword.decode("utf-8"))
-        encyrpted.append(key)
+
+        cipherhw_suit = Fernet(generateKey())
+        encryptedkey = cipherhw_suit.encrypt(key)
+        encyrpted.append(encryptedkey)
         self.encryptDictionary = dict(zip(keys, encyrpted))
 
     def getencryptedData(self):
@@ -112,10 +119,14 @@ class encryptData():
 
 class decryptData():
     def __init__(self, dictionary):
-        key = bytes(dictionary.get('key'))
+        cipher_hwsuite = Fernet(generateKey())
+        key = cipher_hwsuite.decrypt(bytes(dictionary.get('key')))
+        # key = bytes(dictionary.get('key'))
+
         cipher_suite = Fernet(key)
         deyrpted = []
         cipher_username = cipher_suite.decrypt(bytes(dictionary.get('username'), encoding='utf8'))
+        print(cipher_username)
         deyrpted.append(cipher_username.decode("utf-8"))
         cipher_password = cipher_suite.decrypt(bytes(dictionary.get('password'), encoding='utf8'))
         deyrpted.append(cipher_password.decode("utf-8"))
@@ -192,6 +203,13 @@ def connection(address, rootPass, username, password, status):
     child.logfile = sys.stdout
     child.delaybeforesend = 1
     child.expect(pexpect.EOF, timeout=None)
+
+
+def generateKey():
+    password = str(get_mac()).encode()
+    salt = "connector"
+    password_hash = argon2.argon2_hash(password=password, salt=salt)
+    return base64.urlsafe_b64encode(password_hash[:32])
 
 
 if __name__ == '__main__':

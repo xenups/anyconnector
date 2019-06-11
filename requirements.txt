@@ -1,4 +1,5 @@
 altgraph==0.16.1
+argon2==0.1.10
 args==0.1.0
 asn1crypto==0.24.0
 cffi==1.12.3
