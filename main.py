@@ -35,16 +35,31 @@ class MyWindow(QWidget):
         self.setWindowTitle("OPEN CONNECT")
 
         self.pushButton = QPushButton(self)
-        self.pushButton.setText("Send to tray")
+        self.pushButton.setText("Settings")
         self.pushButton.clicked.connect(self.on_pushButton_clicked)
         MyWindow.closeEvent = self.closeEvent
+        MyWindow.changeEvent = self.changeEvent
+
         self.textEdit = QTextEdit(self)
         self.layoutVertical = QVBoxLayout(self)
         self.layoutVertical.addWidget(self.pushButton)
         self.layoutVertical.addWidget(self.textEdit)
 
+    def changeEvent(self, event):
+        if event.type() == QEvent.WindowStateChange:
+            if self.windowState() & Qt.WindowMinimized:
+                self.hide()
+
+    def center(self):
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(
+            QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
+
     def closeEvent(self, event):
-        print("event")
+        print("shutdown app")
         reply = QMessageBox.question(self, 'Message',
                                      "Are you sure to quit?", QMessageBox.Yes, QMessageBox.No)
 
@@ -56,7 +71,7 @@ class MyWindow(QWidget):
 
     @pyqtSlot()
     def on_pushButton_clicked(self):
-        self.hide()
+        setConnectionValues()
 
     @pyqtSlot(str)
     def on_myStream_message(self, message):
@@ -153,6 +168,7 @@ class pickleHandler():
 
 
 def setConnectionValues():
+    EXIT_CODE_REBOOT = -123
     dialog = InputDialog()
     if dialog.exec():
         en = encryptData(dialog.getInputs())
@@ -163,6 +179,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
     def __init__(self, icon, parent=None):
         QSystemTrayIcon.__init__(self, icon, parent)
+        self.activated.connect(self.onTrayIconActivated)
         menu = QMenu(parent)
         settingAction = menu.addAction("Settings")
         LogAction = menu.addAction("Logs")
@@ -170,8 +187,11 @@ class SystemTrayIcon(QSystemTrayIcon):
         exitAction.triggered.connect(self.exitction)
         settingAction.triggered.connect(self.setValues)
         LogAction.triggered.connect(self.showLogWindow)
-
         self.setContextMenu(menu)
+
+    def onTrayIconActivated(self, reason):
+        if reason == QSystemTrayIcon.Trigger:
+            self.showLogWindow()
 
     def exitction(self):
         os._exit()
@@ -180,6 +200,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         setConnectionValues()
 
     def showLogWindow(self):
+        main.center()
         main.show()
 
 
@@ -217,13 +238,12 @@ if __name__ == '__main__':
         setConnectionValues()
     pkl = pickleHandler().load_obj("file")
     dData = decryptData(pkl).getdecryptedData()
-
     t2 = KThread(target=connection, args=(
         dData.get('address'), dData.get('root_password'), dData.get('username'), dData.get('password'), True))
     t2.start()
 
     main = MyWindow()
-
+    main.center()
     myStream = MyStream()
     myStream.message.connect(main.on_myStream_message)
     sys.stdout = myStream
@@ -231,7 +251,5 @@ if __name__ == '__main__':
     trayIcon = SystemTrayIcon(QIcon("icon.png"), w)
     trayIcon.show()
 
-    main.setWindowFlags(main.windowFlags() | Qt.CustomizeWindowHint)
-    main.setWindowFlags(main.windowFlags() & ~Qt.WindowMinimizeButtonHint)
     main.show()
     sys.exit(app.exec_())
