@@ -202,6 +202,7 @@ class SystemTrayIcon(QSystemTrayIcon):
     def showLogWindow(self):
         main.center()
         main.show()
+        main.activateWindow()
 
 
 def connection(address, rootPass, username, password, status):
