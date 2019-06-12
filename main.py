@@ -82,7 +82,7 @@ class MyWindow(QWidget):
 class InputDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        self.setWindowTitle("Settings")
         self.first = QLineEdit(self)
         self.second = QLineEdit(self)
         self.third = QLineEdit(self)
