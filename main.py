@@ -21,7 +21,11 @@ class MyStream(QObject):
         super(MyStream, self).__init__(parent)
 
     def write(self, message):
-        self.message.emit(str(message))
+        if type(message) != str:
+            message = message.decode("utf-8")
+            self.message.emit(str(message))
+        else:
+            self.message.emit(str(message))
 
     def flush(self):
         pass
@@ -248,6 +252,7 @@ if __name__ == '__main__':
     myStream = MyStream()
     myStream.message.connect(main.on_myStream_message)
     sys.stdout = myStream
+
     w = QWidget()
     trayIcon = SystemTrayIcon(QIcon("icon.png"), w)
     trayIcon.show()
