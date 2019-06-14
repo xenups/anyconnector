@@ -8,6 +8,7 @@ elevate==0.1.3
 future==0.17.1
 keywords==0.0.1
 macholib==1.11
+pbr==5.3.0
 pefile==2019.4.18
 pexpect==4.7.0
 ptyprocess==0.6.0
@@ -17,3 +18,4 @@ PyQt5==5.12.2
 PyQt5-sip==4.19.17
 qtgui==0.0.1
 six==1.12.0
+tendo==0.2.15

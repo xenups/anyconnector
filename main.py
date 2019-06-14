@@ -2,6 +2,7 @@ import base64
 import os
 import pickle
 #a lesani 2019
+from tendo import singleton
 from argon2 import *
 from cryptography.fernet import Fernet
 from Kthread import *
@@ -239,6 +240,7 @@ def generateKey():
 
 
 if __name__ == '__main__':
+    me = singleton.SingleInstance()
     if not os.path.exists('file.pkl'):
         setConnectionValues()
     pkl = pickleHandler().load_obj("file")
