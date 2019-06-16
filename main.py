@@ -1,6 +1,7 @@
 import base64
 import os
 import pickle
+import  tendo
 # a lesani 2019
 from tendo import singleton
 from argon2 import *
@@ -258,9 +259,10 @@ def connection(address, rootPass, username, password, status):
     # child.logfile = None
     child.sendline(password)
     print("password sent")
+    # child.delaybeforesend = 1
     child.logfile = sys.stdout
-    child.delaybeforesend = 1
     child.expect(pexpect.EOF, timeout=None)
+
 
 
 def generateKey():
@@ -271,7 +273,6 @@ def generateKey():
 
 
 def connectVPN(dData):
-    print("connecting to :" + dData.get('address'))
     try:
         t2 = KThread(target=connection, args=(
             dData.get('address'), dData.get('root_password'), dData.get('username'), dData.get('password'), True))
