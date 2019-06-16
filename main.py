@@ -182,9 +182,12 @@ class pickleHandler():
 
 
 def loadAndDecryptPkl(fileName):
-    pkl = pickleHandler().load_obj(fileName)
-    dData = decryptData(pkl).getdecryptedData()
-    return dData
+    try:
+        pkl = pickleHandler().load_obj(fileName)
+        dData = decryptData(pkl).getdecryptedData()
+        return dData
+    except:
+        return None
 
 
 def encryptAndSavePkl(data):
@@ -202,7 +205,7 @@ def setConnectionValues(self):
     if dData != None:
         dialog.setInputs(dData)
     if dialog.exec():
-        if  encryptAndSavePkl(dialog.getInputs()):
+        if encryptAndSavePkl(dialog.getInputs()):
             connectVPN(loadAndDecryptPkl("file"))
         else:
             print("some error happened")
