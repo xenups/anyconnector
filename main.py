@@ -77,7 +77,7 @@ class MyWindow(QWidget):
 
     @pyqtSlot()
     def on_pushButton_clicked(self):
-        setConnectionValues(self)
+        setConnectionValues()
 
     @pyqtSlot(str)
     def on_myStream_message(self, message):
@@ -200,16 +200,19 @@ def encryptAndSavePkl(data):
         return False
 
 
-def setConnectionValues(self):
+def setConnectionValues():
     dialog = InputDialog()
     dData = loadAndDecryptPkl("file")
-    if dData != None:
-        dialog.setInputs(dData)
-    if dialog.exec():
-        if encryptAndSavePkl(dialog.getInputs()):
-            connectVPN(loadAndDecryptPkl("file"))
-        else:
-            print("some error happened")
+    try:
+        if dData != None:
+            dialog.setInputs(dData)
+        if dialog.exec():
+            if encryptAndSavePkl(dialog.getInputs()):
+                connectVPN(loadAndDecryptPkl("file"))
+            else:
+                print("some error happened")
+    except:
+       print("errrrorr")
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -229,13 +232,14 @@ class SystemTrayIcon(QSystemTrayIcon):
     def onTrayIconActivated(self, reason):
         if reason == QSystemTrayIcon.Trigger:
             self.showLogWindow()
-
+    @pyqtSlot()
     def exitction(self):
         os._exit(0)
-
+    @pyqtSlot()
     def setValues(self):
-        setConnectionValues(self)
-
+        self.showLogWindow()
+        setConnectionValues()
+    @pyqtSlot()
     def showLogWindow(self):
         main.center()
         main.show()
@@ -286,7 +290,7 @@ if __name__ == '__main__':
     main = MyWindow()
     main.center()
     if not os.path.exists('file.pkl'):
-        setConnectionValues(main)
+        setConnectionValues()
     else:
         try:
             dData = loadAndDecryptPkl("file")
