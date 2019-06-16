@@ -286,12 +286,13 @@ if __name__ == '__main__':
     main.center()
     if not os.path.exists('file.pkl'):
         setConnectionValues(main)
-    pkl = pickleHandler().load_obj("file")
-    try:
-        dData = decryptData(pkl).getdecryptedData()
-    except:
-        QMessageBox.about(main, ":( !",
-                          "There is a problem with ur file.pkl \n  if u are using a new network adapter \n please delete file.pkl")
+    else:
+        try:
+            dData = loadAndDecryptPkl("file")
+            connectVPN(dData)
+        except:
+            QMessageBox.about(main, ":( !",
+                              "There is a problem with ur file.pkl \n  if u are using a new network adapter \n please delete file.pkl")
 
     myStream = MyStream()
     myStream.message.connect(main.on_myStream_message)
