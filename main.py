@@ -1,7 +1,7 @@
 import base64
 import os
 import pickle
-#a lesani 2019
+# a lesani 2019
 from tendo import singleton
 from argon2 import *
 from cryptography.fernet import Fernet
@@ -70,13 +70,13 @@ class MyWindow(QWidget):
 
         if reply == QMessageBox.Yes:
             event.accept()
-            os._exit(1)
+            os._exit(0)
         else:
             event.ignore()
 
     @pyqtSlot()
     def on_pushButton_clicked(self):
-        setConnectionValues()
+        setConnectionValues(self)
 
     @pyqtSlot(str)
     def on_myStream_message(self, message):
@@ -106,6 +106,12 @@ class InputDialog(QDialog):
 
     def getInputs(self):
         return (self.first.text(), self.second.text(), self.third.text(), self.fourth.text())
+
+    def setInputs(self, dData):
+        self.first.setText(dData.get('username'))
+        self.second.setText(dData.get('password'))
+        self.third.setText(dData.get('address'))
+        self.fourth.setText(dData.get('root_password'))
 
 
 class encryptData():
@@ -146,7 +152,6 @@ class decryptData():
         cipher_suite = Fernet(key)
         deyrpted = []
         cipher_username = cipher_suite.decrypt(bytes(dictionary.get('username'), encoding='utf8'))
-        print(cipher_username)
         deyrpted.append(cipher_username.decode("utf-8"))
         cipher_password = cipher_suite.decrypt(bytes(dictionary.get('password'), encoding='utf8'))
         deyrpted.append(cipher_password.decode("utf-8"))
@@ -163,21 +168,44 @@ class decryptData():
 
 class pickleHandler():
     def save_obj(self, dictionary):
-        f = open("file.pkl", "wb")
-        pickle.dump(dictionary, f)
-        f.close()
+        try:
+            f = open("file.pkl", "wb")
+            pickle.dump(dictionary, f)
+            f.close()
+            return True
+        except:
+            return False
 
     def load_obj(self, name):
         with open(name + '.pkl', 'rb') as f:
             return pickle.load(f)
 
 
-def setConnectionValues():
-    EXIT_CODE_REBOOT = -123
-    dialog = InputDialog()
-    if dialog.exec():
-        en = encryptData(dialog.getInputs())
+def loadAndDecryptPkl(fileName):
+    pkl = pickleHandler().load_obj(fileName)
+    dData = decryptData(pkl).getdecryptedData()
+    return dData
+
+
+def encryptAndSavePkl(data):
+    try:
+        en = encryptData(data)
         cn = pickleHandler().save_obj(en.getencryptedData())
+        return True
+    except:
+        return False
+
+
+def setConnectionValues(self):
+    dialog = InputDialog()
+    dData = loadAndDecryptPkl("file")
+    if dData != None:
+        dialog.setInputs(dData)
+    if dialog.exec():
+        if  encryptAndSavePkl(dialog.getInputs()):
+            connectVPN(loadAndDecryptPkl("file"))
+        else:
+            print("some error happened")
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -199,10 +227,10 @@ class SystemTrayIcon(QSystemTrayIcon):
             self.showLogWindow()
 
     def exitction(self):
-        os._exit()
+        os._exit(0)
 
     def setValues(self):
-        setConnectionValues()
+        setConnectionValues(self)
 
     def showLogWindow(self):
         main.center()
@@ -239,18 +267,30 @@ def generateKey():
     return base64.urlsafe_b64encode(password_hash[:32])
 
 
+def connectVPN(dData):
+    print("connecting to :" + dData.get('address'))
+    try:
+        t2 = KThread(target=connection, args=(
+            dData.get('address'), dData.get('root_password'), dData.get('username'), dData.get('password'), True))
+        t2.start()
+    except:
+        print("cannot create connection")
+
+
 if __name__ == '__main__':
     me = singleton.SingleInstance()
-    if not os.path.exists('file.pkl'):
-        setConnectionValues()
-    pkl = pickleHandler().load_obj("file")
-    dData = decryptData(pkl).getdecryptedData()
-    t2 = KThread(target=connection, args=(
-        dData.get('address'), dData.get('root_password'), dData.get('username'), dData.get('password'), True))
-    t2.start()
-
     main = MyWindow()
     main.center()
+    if not os.path.exists('file.pkl'):
+        setConnectionValues(main)
+    pkl = pickleHandler().load_obj("file")
+    try:
+        dData = decryptData(pkl).getdecryptedData()
+    except:
+        QMessageBox.about(main, ":( !",
+                          "There is a problem with ur file.pkl \n  if u are using a new network adapter \n please delete file.pkl")
+
+    connectVPN(dData)
     myStream = MyStream()
     myStream.message.connect(main.on_myStream_message)
     sys.stdout = myStream

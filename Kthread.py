@@ -6,6 +6,9 @@ import trace
 import threading
 
 
+
+
+# also using for LOG , to dont create a lot of instances
 class KThread(threading.Thread):
     """A subclass of threading.Thread, with a kill()
   method."""
