@@ -293,7 +293,6 @@ if __name__ == '__main__':
         QMessageBox.about(main, ":( !",
                           "There is a problem with ur file.pkl \n  if u are using a new network adapter \n please delete file.pkl")
 
-    connectVPN(dData)
     myStream = MyStream()
     myStream.message.connect(main.on_myStream_message)
     sys.stdout = myStream
