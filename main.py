@@ -1,7 +1,7 @@
 import base64
 import os
 import pickle
-import  tendo
+import tendo
 # a lesani 2019
 from tendo import singleton
 from argon2 import *
@@ -55,6 +55,7 @@ class MyWindow(QWidget):
         if event.type() == QEvent.WindowStateChange:
             if self.windowState() & Qt.WindowMinimized:
                 self.hide()
+                dialog.hide()
 
     def center(self):
         frameGm = self.frameGeometry()
@@ -201,18 +202,19 @@ def encryptAndSavePkl(data):
 
 
 def setConnectionValues():
-    dialog = InputDialog()
-    dData = loadAndDecryptPkl("file")
-    try:
-        if dData != None:
-            dialog.setInputs(dData)
-        if dialog.exec():
-            if encryptAndSavePkl(dialog.getInputs()):
-                connectVPN(loadAndDecryptPkl("file"))
-            else:
-                print("some error happened")
-    except:
-       print("errrrorr")
+    if not dialog.isVisible():
+        dialog.show()
+        dData = loadAndDecryptPkl("file")
+        try:
+            if dData != None:
+                dialog.setInputs(dData)
+            if dialog.exec():
+                if encryptAndSavePkl(dialog.getInputs()):
+                    connectVPN(loadAndDecryptPkl("file"))
+                else:
+                    print("some error happened")
+        except:
+            print("errrrorr")
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -232,13 +234,16 @@ class SystemTrayIcon(QSystemTrayIcon):
     def onTrayIconActivated(self, reason):
         if reason == QSystemTrayIcon.Trigger:
             self.showLogWindow()
+
     @pyqtSlot()
     def exitction(self):
         os._exit(0)
+
     @pyqtSlot()
     def setValues(self):
         self.showLogWindow()
         setConnectionValues()
+
     @pyqtSlot()
     def showLogWindow(self):
         main.center()
@@ -268,7 +273,6 @@ def connection(address, rootPass, username, password, status):
     child.expect(pexpect.EOF, timeout=None)
 
 
-
 def generateKey():
     password = str(get_mac()).encode()
     salt = "connector"
@@ -283,6 +287,24 @@ def connectVPN(dData):
         t2.start()
     except:
         print("cannot create connection")
+
+
+def getBlackPallet():
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.WindowText, Qt.white)
+    palette.setColor(QPalette.Base, QColor(15, 15, 15))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ToolTipBase, Qt.white)
+    palette.setColor(QPalette.ToolTipText, Qt.white)
+    palette.setColor(QPalette.Text, Qt.darkGreen)
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ButtonText, Qt.white)
+    palette.setColor(QPalette.BrightText, Qt.red)
+
+    palette.setColor(QPalette.Highlight, QColor(142, 45, 197).lighter())
+    palette.setColor(QPalette.HighlightedText, Qt.black)
+    return palette
 
 
 if __name__ == '__main__':
@@ -302,8 +324,11 @@ if __name__ == '__main__':
     myStream = MyStream()
     myStream.message.connect(main.on_myStream_message)
     sys.stdout = myStream
+    app.setStyle('Fusion')
+    app.setPalette(getBlackPallet())
 
     w = QWidget()
+    dialog = InputDialog()
     trayIcon = SystemTrayIcon(QIcon("icon.png"), w)
     trayIcon.show()
 
