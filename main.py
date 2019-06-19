@@ -146,26 +146,32 @@ class encryptData():
 
 
 class decryptData():
+
     def __init__(self, dictionary):
-        cipher_hwsuite = Fernet(generateKey())
-        key = cipher_hwsuite.decrypt(bytes(dictionary.get('key')))
-        # key = bytes(dictionary.get('key'))
+        try:
+            cipher_hwsuite = Fernet(generateKey())
+            print(generateKey())
+            key = cipher_hwsuite.decrypt(bytes(dictionary.get('key')))
+            # key = bytes(dictionary.get('key'))
+            print(key)
+            cipher_suite = Fernet(key)
+            deyrpted = []
+            cipher_username = cipher_suite.decrypt(bytes(dictionary.get('username'), encoding='utf8'))
+            deyrpted.append(cipher_username.decode("utf-8"))
+            cipher_password = cipher_suite.decrypt(bytes(dictionary.get('password'), encoding='utf8'))
+            deyrpted.append(cipher_password.decode("utf-8"))
+            cipher_address = cipher_suite.decrypt(bytes(dictionary.get('address'), encoding='utf8'))
+            deyrpted.append(cipher_address.decode("utf-8"))
+            cipher_rootpassword = cipher_suite.decrypt(bytes(dictionary.get('root_password'), encoding='utf8'))
+            deyrpted.append(cipher_rootpassword.decode("utf-8"))
+            keys = ['username', 'password', 'address', 'root_password', 'key']
+            self.decryptDictionary = dict(zip(keys, deyrpted))
+        except:
+            print("dycriptation fauld")
 
-        cipher_suite = Fernet(key)
-        deyrpted = []
-        cipher_username = cipher_suite.decrypt(bytes(dictionary.get('username'), encoding='utf8'))
-        deyrpted.append(cipher_username.decode("utf-8"))
-        cipher_password = cipher_suite.decrypt(bytes(dictionary.get('password'), encoding='utf8'))
-        deyrpted.append(cipher_password.decode("utf-8"))
-        cipher_address = cipher_suite.decrypt(bytes(dictionary.get('address'), encoding='utf8'))
-        deyrpted.append(cipher_address.decode("utf-8"))
-        cipher_rootpassword = cipher_suite.decrypt(bytes(dictionary.get('root_password'), encoding='utf8'))
-        deyrpted.append(cipher_rootpassword.decode("utf-8"))
-        keys = ['username', 'password', 'address', 'root_password', 'key']
-        self.decryptDictionary = dict(zip(keys, deyrpted))
 
-    def getdecryptedData(self):
-        return (self.decryptDictionary)
+def getdecryptedData(self):
+    return (self.decryptDictionary)
 
 
 class pickleHandler():
@@ -179,8 +185,11 @@ class pickleHandler():
             return False
 
     def load_obj(self, name):
-        with open(name + '.pkl', 'rb') as f:
-            return pickle.load(f)
+        try:
+            with open(name + '.pkl', 'rb') as f:
+                return pickle.load(f)
+        except:
+            print("load has some issues")
 
 
 def loadAndDecryptPkl(fileName):
@@ -189,7 +198,7 @@ def loadAndDecryptPkl(fileName):
         dData = decryptData(pkl).getdecryptedData()
         return dData
     except:
-        return None
+        print("some issue happened in dycrypting or loading  file")
 
 
 def encryptAndSavePkl(data):
@@ -309,6 +318,7 @@ def getBlackPallet():
 
 if __name__ == '__main__':
     me = singleton.SingleInstance()
+    dialog = InputDialog()
     main = MyWindow()
     main.center()
     if not os.path.exists('file.pkl'):
@@ -328,7 +338,6 @@ if __name__ == '__main__':
     app.setPalette(getBlackPallet())
 
     w = QWidget()
-    dialog = InputDialog()
     trayIcon = SystemTrayIcon(QIcon("icon.png"), w)
     trayIcon.show()
 
