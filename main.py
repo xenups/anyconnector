@@ -150,10 +150,8 @@ class decryptData():
     def __init__(self, dictionary):
         try:
             cipher_hwsuite = Fernet(generateKey())
-            print(generateKey())
             key = cipher_hwsuite.decrypt(bytes(dictionary.get('key')))
             # key = bytes(dictionary.get('key'))
-            print(key)
             cipher_suite = Fernet(key)
             deyrpted = []
             cipher_username = cipher_suite.decrypt(bytes(dictionary.get('username'), encoding='utf8'))
