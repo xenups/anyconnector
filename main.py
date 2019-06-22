@@ -13,7 +13,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from uuid import getnode as get_mac
 
-app = QApplication(sys.argv)
 
 
 class MyStream(QObject):
@@ -40,15 +39,16 @@ class MyWindow(QWidget):
         self.setWindowIcon(QIcon(scriptDir + os.path.sep + 'icon.png'))
         self.setWindowTitle("OPEN CONNECT")
 
-        self.pushButton = QPushButton(self)
-        self.pushButton.setText("Settings")
-        self.pushButton.clicked.connect(self.on_pushButton_clicked)
+        self.settingsPushButton = QPushButton(self)
+        self.settingsPushButton.setText("Settings")
+        self.settingsPushButton.clicked.connect(self.on_pushButton_clicked)
+
         MyWindow.closeEvent = self.closeEvent
         MyWindow.changeEvent = self.changeEvent
 
         self.textEdit = QTextEdit(self)
         self.layoutVertical = QVBoxLayout(self)
-        self.layoutVertical.addWidget(self.pushButton)
+        self.layoutVertical.addWidget(self.settingsPushButton)
         self.layoutVertical.addWidget(self.textEdit)
 
     def changeEvent(self, event):
@@ -78,7 +78,7 @@ class MyWindow(QWidget):
 
     @pyqtSlot()
     def on_pushButton_clicked(self):
-        setConnectionValues()
+        setConnectionValues(self)
 
     @pyqtSlot(str)
     def on_myStream_message(self, message):
@@ -90,30 +90,34 @@ class InputDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Settings")
-        self.first = QLineEdit(self)
-        self.second = QLineEdit(self)
-        self.third = QLineEdit(self)
-        self.fourth = QLineEdit(self)
+        self.username = QLineEdit(self)
+        self.password = QLineEdit(self)
+        self.address = QLineEdit(self)
+        self.root_pass = QLineEdit(self)
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self);
 
         layout = QFormLayout(self)
-        layout.addRow("username: ", self.first)
-        layout.addRow("password: ", self.second)
-        layout.addRow("address: ", self.third)
-        layout.addRow("root Password", self.fourth)
+        layout.addRow("username: ", self.username)
+        layout.addRow("password: ", self.password)
+        layout.addRow("address: ", self.address)
+        layout.addRow("root Password", self.root_pass)
+        self.root_pass.setEchoMode(QLineEdit.Password)
         layout.addWidget(buttonBox)
 
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
 
     def getInputs(self):
-        return (self.first.text(), self.second.text(), self.third.text(), self.fourth.text())
+        return self.username.text(), self.password.text(), self.address.text(), self.root_pass.text()
 
     def setInputs(self, dData):
-        self.first.setText(dData.get('username'))
-        self.second.setText(dData.get('password'))
-        self.third.setText(dData.get('address'))
-        self.fourth.setText(dData.get('root_password'))
+        if dData:
+            self.username.setText(dData.get('username'))
+            self.password.setText(dData.get('password'))
+            self.address.setText(dData.get('address'))
+            self.root_pass.setText(dData.get('root_password'))
+        else:
+            return None
 
 
 class encryptData():
@@ -141,8 +145,9 @@ class encryptData():
         encyrpted.append(encryptedkey)
         self.encryptDictionary = dict(zip(keys, encyrpted))
 
+    @property
     def getencryptedData(self):
-        return (self.encryptDictionary)
+        return self.encryptDictionary
 
 
 class decryptData():
@@ -165,11 +170,11 @@ class decryptData():
             keys = ['username', 'password', 'address', 'root_password', 'key']
             self.decryptDictionary = dict(zip(keys, deyrpted))
         except:
+            self.decryptDictionary = []
             print("dycriptation fauld")
 
-
-def getdecryptedData(self):
-    return (self.decryptDictionary)
+    def getdecryptedData(self):
+        return (self.decryptDictionary)
 
 
 class pickleHandler():
@@ -191,37 +196,33 @@ class pickleHandler():
 
 
 def loadAndDecryptPkl(fileName):
-    try:
-        pkl = pickleHandler().load_obj(fileName)
-        dData = decryptData(pkl).getdecryptedData()
-        return dData
-    except:
-        print("some issue happened in dycrypting or loading  file")
+    pkl = pickleHandler().load_obj(fileName)
+    dData = decryptData(pkl).getdecryptedData()
+    return dData
 
 
 def encryptAndSavePkl(data):
     try:
         en = encryptData(data)
-        cn = pickleHandler().save_obj(en.getencryptedData())
+        cn = pickleHandler().save_obj(en.getencryptedData)
         return True
     except:
         return False
 
 
-def setConnectionValues():
+def setConnectionValues(self, ):
     if not dialog.isVisible():
         dialog.show()
+
         dData = loadAndDecryptPkl("file")
-        try:
-            if dData != None:
-                dialog.setInputs(dData)
-            if dialog.exec():
-                if encryptAndSavePkl(dialog.getInputs()):
-                    connectVPN(loadAndDecryptPkl("file"))
-                else:
-                    print("some error happened")
-        except:
-            print("errrrorr")
+
+        if dData != None:
+            dialog.setInputs(dData)
+        if dialog.exec():
+            if encryptAndSavePkl(dialog.getInputs()):
+                connectVPN(loadAndDecryptPkl("file"))
+            else:
+                print("some error happened")
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -249,7 +250,7 @@ class SystemTrayIcon(QSystemTrayIcon):
     @pyqtSlot()
     def setValues(self):
         self.showLogWindow()
-        setConnectionValues()
+        setConnectionValues(self)
 
     @pyqtSlot()
     def showLogWindow(self):
@@ -258,7 +259,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         main.activateWindow()
 
 
-def connection(address, rootPass, username, password, status):
+def connection(address, root_pass, username, password, status):
     if status == False:
         child = pexpect.spawn('sudo /usr/sbin/openconnect  ' + 'disconnect')
         child.close(True)
@@ -268,7 +269,7 @@ def connection(address, rootPass, username, password, status):
     # child.logfile = sys.stdout.buffer
 
     child.delaybeforesend = 1
-    child.sendline(rootPass)
+    child.sendline(root_pass)
     child.sendline('yes')
     child.sendline(username)
     print("user name sent")
@@ -316,11 +317,12 @@ def getBlackPallet():
 
 if __name__ == '__main__':
     me = singleton.SingleInstance()
+    app = QApplication(sys.argv)
     dialog = InputDialog()
     main = MyWindow()
     main.center()
     if not os.path.exists('file.pkl'):
-        setConnectionValues()
+        setConnectionValues(main)
     else:
         try:
             dData = loadAndDecryptPkl("file")
@@ -332,8 +334,8 @@ if __name__ == '__main__':
     myStream = MyStream()
     myStream.message.connect(main.on_myStream_message)
     sys.stdout = myStream
-    app.setStyle('Fusion')
-    app.setPalette(getBlackPallet())
+    # app.setStyle('Fusion')
+    # app.setPalette(getBlackPallet())
 
     w = QWidget()
     trayIcon = SystemTrayIcon(QIcon("icon.png"), w)
