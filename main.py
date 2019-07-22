@@ -169,7 +169,7 @@ class DecryptData:
             self.decrypt_dictionary = dict(zip(keys, decrypted))
         except ImportError:
             self.decrypt_dictionary = []
-            print("decapitation failed")
+            print("decryption failed")
 
     def get_decrypted_data(self):
         return self.decrypt_dictionary
@@ -197,8 +197,10 @@ class PickleHandler:
 
 def load_decrypt_pkl(file_name):
     pkl = PickleHandler().load_obj(file_name)
-    d_data = DecryptData(pkl).get_decrypted_data()
-    return d_data
+    if pkl is not None:
+        return DecryptData(pkl).get_decrypted_data()
+    else:
+        return False
 
 
 def encrypt_save_pkl(data):
@@ -213,10 +215,8 @@ def encrypt_save_pkl(data):
 def set_connection_values(self, ):
     if not dialog.isVisible():
         dialog.show()
-
-        d_data = load_decrypt_pkl("file")
-
-        if d_data is not None:
+        if os.path.isfile("file.pkl"):
+            d_data = load_decrypt_pkl("file")
             dialog.set_inputs(d_data)
         if dialog.exec():
             if encrypt_save_pkl(dialog.get_inputs()):
@@ -291,7 +291,7 @@ def connect_vpn(d_data):
         t2 = KThread(target=connection, args=(
             d_data.get('address'), d_data.get('root_password'), d_data.get('username'), d_data.get('password'), True))
         t2.start()
-    except:
+    except ImportError:
         print("cannot create connection")
 
 
@@ -319,12 +319,12 @@ if __name__ == '__main__':
     dialog = InputDialog()
     main = MyWindow()
     main.center()
-    if not os.path.exists('file.pkl'):
+    if not os.path.isfile("file.pkl"):
         set_connection_values(main)
     else:
         try:
-            dData = load_decrypt_pkl("file")
-            connect_vpn(dData)
+            d_data = load_decrypt_pkl("file")
+            connect_vpn(d_data)
         except ImportError:
             QMessageBox.about(main, ":( !",
                               "There is a problem with ur file.pkl")
