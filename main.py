@@ -45,6 +45,7 @@ class MyWindow(QWidget):
         MyWindow.changeEvent = self.changeEvent
 
         self.textEdit = QTextEdit(self)
+        self.textEdit.setReadOnly(True)
         self.layoutVertical = QVBoxLayout(self)
         self.layoutVertical.addWidget(self.settingsPushButton)
         self.layoutVertical.addWidget(self.textEdit)
