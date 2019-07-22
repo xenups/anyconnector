@@ -1,5 +1,4 @@
 import base64
-import os
 import pickle
 import tendo
 # a lesani 2019
@@ -12,7 +11,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from uuid import getnode as get_mac
-
 
 
 class MyStream(QObject):
@@ -35,13 +33,13 @@ class MyStream(QObject):
 class MyWindow(QWidget):
     def __init__(self, parent=None):
         super(MyWindow, self).__init__(parent)
-        scriptDir = os.path.dirname(os.path.realpath(__file__))
-        self.setWindowIcon(QIcon(scriptDir + os.path.sep + 'icon.png'))
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        self.setWindowIcon(QIcon(script_dir + os.path.sep + 'icon.png'))
         self.setWindowTitle("OPEN CONNECT")
 
         self.settingsPushButton = QPushButton(self)
         self.settingsPushButton.setText("Settings")
-        self.settingsPushButton.clicked.connect(self.on_pushButton_clicked)
+        self.settingsPushButton.clicked.connect(self.on_pushbutton_clicked)
 
         MyWindow.closeEvent = self.closeEvent
         MyWindow.changeEvent = self.changeEvent
@@ -58,12 +56,12 @@ class MyWindow(QWidget):
                 dialog.hide()
 
     def center(self):
-        frameGm = self.frameGeometry()
+        frame_gm = self.frameGeometry()
         screen = QApplication.desktop().screenNumber(
             QApplication.desktop().cursor().pos())
-        centerPoint = QApplication.desktop().screenGeometry(screen).center()
-        frameGm.moveCenter(centerPoint)
-        self.move(frameGm.topLeft())
+        center_point = QApplication.desktop().screenGeometry(screen).center()
+        frame_gm.moveCenter(center_point)
+        self.move(frame_gm.topLeft())
 
     def closeEvent(self, event):
         print("shutdown app")
@@ -77,11 +75,11 @@ class MyWindow(QWidget):
             event.ignore()
 
     @pyqtSlot()
-    def on_pushButton_clicked(self):
-        setConnectionValues(self)
+    def on_pushbutton_clicked(self):
+        set_connection_values(self)
 
     @pyqtSlot(str)
-    def on_myStream_message(self, message):
+    def on_my_stream_message(self, message):
         self.textEdit.moveCursor(QTextCursor.End)
         self.textEdit.insertPlainText(message)
 
@@ -94,7 +92,7 @@ class InputDialog(QDialog):
         self.password = QLineEdit(self)
         self.address = QLineEdit(self)
         self.root_pass = QLineEdit(self)
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self);
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self);
 
         layout = QFormLayout(self)
         layout.addRow("username: ", self.username)
@@ -102,25 +100,25 @@ class InputDialog(QDialog):
         layout.addRow("address: ", self.address)
         layout.addRow("root Password", self.root_pass)
         self.root_pass.setEchoMode(QLineEdit.Password)
-        layout.addWidget(buttonBox)
+        layout.addWidget(button_box)
 
-        buttonBox.accepted.connect(self.accept)
-        buttonBox.rejected.connect(self.reject)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
 
-    def getInputs(self):
+    def get_inputs(self):
         return self.username.text(), self.password.text(), self.address.text(), self.root_pass.text()
 
-    def setInputs(self, dData):
-        if dData:
-            self.username.setText(dData.get('username'))
-            self.password.setText(dData.get('password'))
-            self.address.setText(dData.get('address'))
-            self.root_pass.setText(dData.get('root_password'))
+    def set_inputs(self, d_data):
+        if d_data:
+            self.username.setText(d_data.get('username'))
+            self.password.setText(d_data.get('password'))
+            self.address.setText(d_data.get('address'))
+            self.root_pass.setText(d_data.get('root_password'))
         else:
             return None
 
 
-class encryptData():
+class EncryptData:
     def __init__(self, *args, **keywords):
         anyconnect_login_info = []
         for arg in args:
@@ -140,87 +138,89 @@ class encryptData():
 
         encyrpted.append(cipher_rootpassword.decode("utf-8"))
 
-        cipherhw_suit = Fernet(generateKey())
-        encryptedkey = cipherhw_suit.encrypt(key)
-        encyrpted.append(encryptedkey)
+        cipher_hw_suit = Fernet(generate_key())
+        encrypted_key = cipher_hw_suit.encrypt(key)
+        encyrpted.append(encrypted_key)
         self.encryptDictionary = dict(zip(keys, encyrpted))
 
     @property
-    def getencryptedData(self):
+    def get_encrypted_data(self):
         return self.encryptDictionary
 
 
-class decryptData():
+class DecryptData:
 
     def __init__(self, dictionary):
         try:
-            cipher_hwsuite = Fernet(generateKey())
-            key = cipher_hwsuite.decrypt(bytes(dictionary.get('key')))
+            cipher_hw_suite = Fernet(generate_key())
+            key = cipher_hw_suite.decrypt(bytes(dictionary.get('key')))
             # key = bytes(dictionary.get('key'))
             cipher_suite = Fernet(key)
-            deyrpted = []
+            decrypted = []
             cipher_username = cipher_suite.decrypt(bytes(dictionary.get('username'), encoding='utf8'))
-            deyrpted.append(cipher_username.decode("utf-8"))
+            decrypted.append(cipher_username.decode("utf-8"))
             cipher_password = cipher_suite.decrypt(bytes(dictionary.get('password'), encoding='utf8'))
-            deyrpted.append(cipher_password.decode("utf-8"))
+            decrypted.append(cipher_password.decode("utf-8"))
             cipher_address = cipher_suite.decrypt(bytes(dictionary.get('address'), encoding='utf8'))
-            deyrpted.append(cipher_address.decode("utf-8"))
-            cipher_rootpassword = cipher_suite.decrypt(bytes(dictionary.get('root_password'), encoding='utf8'))
-            deyrpted.append(cipher_rootpassword.decode("utf-8"))
+            decrypted.append(cipher_address.decode("utf-8"))
+            cipher_root_password = cipher_suite.decrypt(bytes(dictionary.get('root_password'), encoding='utf8'))
+            decrypted.append(cipher_root_password.decode("utf-8"))
             keys = ['username', 'password', 'address', 'root_password', 'key']
-            self.decryptDictionary = dict(zip(keys, deyrpted))
-        except:
-            self.decryptDictionary = []
-            print("dycriptation fauld")
+            self.decrypt_dictionary = dict(zip(keys, decrypted))
+        except ImportError:
+            self.decrypt_dictionary = []
+            print("decapitation failed")
 
-    def getdecryptedData(self):
-        return (self.decryptDictionary)
+    def get_decrypted_data(self):
+        return self.decrypt_dictionary
 
 
-class pickleHandler():
-    def save_obj(self, dictionary):
+class PickleHandler:
+    @staticmethod
+    def save_obj(dictionary):
         try:
             f = open("file.pkl", "wb")
             pickle.dump(dictionary, f)
             f.close()
             return True
-        except:
+        except ImportError:
             return False
 
-    def load_obj(self, name):
+    @staticmethod
+    def load_obj(name):
         try:
             with open(name + '.pkl', 'rb') as f:
                 return pickle.load(f)
-        except:
+        except ImportError:
             print("load has some issues")
 
 
-def loadAndDecryptPkl(fileName):
-    pkl = pickleHandler().load_obj(fileName)
-    dData = decryptData(pkl).getdecryptedData()
-    return dData
+def load_decrypt_pkl(file_name):
+    pkl = PickleHandler().load_obj(file_name)
+    d_data = DecryptData(pkl).get_decrypted_data()
+    return d_data
 
 
-def encryptAndSavePkl(data):
+def encrypt_save_pkl(data):
     try:
-        en = encryptData(data)
-        cn = pickleHandler().save_obj(en.getencryptedData)
+        en = EncryptData(data)
+        cn = PickleHandler().save_obj(en.get_encrypted_data)
         return True
-    except:
+    except ImportError:
         return False
 
 
-def setConnectionValues(self, ):
+def set_connection_values(self, ):
     if not dialog.isVisible():
         dialog.show()
 
-        dData = loadAndDecryptPkl("file")
+        d_data = load_decrypt_pkl("file")
 
-        if dData != None:
-            dialog.setInputs(dData)
+        if d_data is not None:
+            dialog.set_inputs(d_data)
         if dialog.exec():
-            if encryptAndSavePkl(dialog.getInputs()):
-                connectVPN(loadAndDecryptPkl("file"))
+            if encrypt_save_pkl(dialog.get_inputs()):
+                connect_vpn(load_decrypt_pkl("file"))
             else:
                 print("some error happened")
 
@@ -229,38 +229,38 @@ class SystemTrayIcon(QSystemTrayIcon):
 
     def __init__(self, icon, parent=None):
         QSystemTrayIcon.__init__(self, icon, parent)
-        self.activated.connect(self.onTrayIconActivated)
+        self.activated.connect(self.on_tray_icon_activated)
         menu = QMenu(parent)
-        settingAction = menu.addAction("Settings")
-        LogAction = menu.addAction("Logs")
-        exitAction = menu.addAction("Exit")
-        exitAction.triggered.connect(self.exitction)
-        settingAction.triggered.connect(self.setValues)
-        LogAction.triggered.connect(self.showLogWindow)
+        setting_action = menu.addAction("Settings")
+        log_action = menu.addAction("Logs")
+        exit_action = menu.addAction("Exit")
+        exit_action.triggered.connect(self.exit_action)
+        setting_action.triggered.connect(self.set_values)
+        log_action.triggered.connect(self.show_log_window)
         self.setContextMenu(menu)
 
-    def onTrayIconActivated(self, reason):
+    def on_tray_icon_activated(self, reason):
         if reason == QSystemTrayIcon.Trigger:
-            self.showLogWindow()
+            self.show_log_window()
 
     @pyqtSlot()
-    def exitction(self):
+    def exit_action(self):
         os._exit(0)
 
     @pyqtSlot()
-    def setValues(self):
-        self.showLogWindow()
-        setConnectionValues(self)
+    def set_values(self):
+        self.show_log_window()
+        set_connection_values(self)
 
     @pyqtSlot()
-    def showLogWindow(self):
+    def show_log_window(self):
         main.center()
         main.show()
         main.activateWindow()
 
 
 def connection(address, root_pass, username, password, status):
-    if status == False:
+    if not status:
         child = pexpect.spawn('sudo /usr/sbin/openconnect  ' + 'disconnect')
         child.close(True)
         child.expect("disconnect")
@@ -273,31 +273,29 @@ def connection(address, root_pass, username, password, status):
     child.sendline('yes')
     child.sendline(username)
     print("user name sent")
-    # child.logfile = None
     child.sendline(password)
     print("password sent")
-    # child.delaybeforesend = 1
     child.logfile = sys.stdout
     child.expect(pexpect.EOF, timeout=None)
 
 
-def generateKey():
+def generate_key():
     password = str(get_mac()).encode()
     salt = "connector"
     password_hash = argon2_hash(password=password, salt=salt)
     return base64.urlsafe_b64encode(password_hash[:32])
 
 
-def connectVPN(dData):
+def connect_vpn(d_data):
     try:
         t2 = KThread(target=connection, args=(
-            dData.get('address'), dData.get('root_password'), dData.get('username'), dData.get('password'), True))
+            d_data.get('address'), d_data.get('root_password'), d_data.get('username'), d_data.get('password'), True))
         t2.start()
     except:
         print("cannot create connection")
 
 
-def getBlackPallet():
+def get_black_pallet():
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.WindowText, Qt.white)
@@ -322,17 +320,17 @@ if __name__ == '__main__':
     main = MyWindow()
     main.center()
     if not os.path.exists('file.pkl'):
-        setConnectionValues(main)
+        set_connection_values(main)
     else:
         try:
-            dData = loadAndDecryptPkl("file")
-            connectVPN(dData)
-        except:
+            dData = load_decrypt_pkl("file")
+            connect_vpn(dData)
+        except ImportError:
             QMessageBox.about(main, ":( !",
-                              "There is a problem with ur file.pkl \n  if u are using a new network adapter \n please delete file.pkl")
+                              "There is a problem with ur file.pkl")
 
     myStream = MyStream()
-    myStream.message.connect(main.on_myStream_message)
+    myStream.message.connect(main.on_my_stream_message)
     sys.stdout = myStream
     # app.setStyle('Fusion')
     # app.setPalette(getBlackPallet())
