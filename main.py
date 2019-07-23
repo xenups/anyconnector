@@ -1,16 +1,14 @@
-import base64
-import pickle
-import tendo
+import os
 # a lesani 2019
 from tendo import singleton
-from argon2 import *
-from cryptography.fernet import Fernet
-from Kthread import *
-import pexpect
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from uuid import getnode as get_mac
+from protection import *
+
+
+# from util import load_decrypt_pkl, encrypt_save_pkl, connect_vpn, sys
 
 
 class MyStream(QObject):
@@ -119,100 +117,6 @@ class InputDialog(QDialog):
             return None
 
 
-class EncryptData:
-    def __init__(self, *args, **keywords):
-        anyconnect_login_info = []
-        for arg in args:
-            anyconnect_login_info.extend(arg)
-        keys = ['username', 'password', 'address', 'root_password', 'key']
-        dictionary = dict(zip(keys, anyconnect_login_info))
-        key = Fernet.generate_key()
-        cipher_suite = Fernet(key)
-        encyrpted = []
-        cipher_username = cipher_suite.encrypt(bytes(dictionary.get('username'), encoding='utf8'))
-        encyrpted.append(cipher_username.decode("utf-8"))
-        cipher_password = cipher_suite.encrypt(bytes(dictionary.get('password'), encoding='utf8'))
-        encyrpted.append(cipher_password.decode("utf-8"))
-        cipher_address = cipher_suite.encrypt(bytes(dictionary.get('address'), encoding='utf8'))
-        encyrpted.append(cipher_address.decode("utf-8"))
-        cipher_rootpassword = cipher_suite.encrypt(bytes(dictionary.get('root_password'), encoding='utf8'))
-
-        encyrpted.append(cipher_rootpassword.decode("utf-8"))
-
-        cipher_hw_suit = Fernet(generate_key())
-        encrypted_key = cipher_hw_suit.encrypt(key)
-        encyrpted.append(encrypted_key)
-        self.encryptDictionary = dict(zip(keys, encyrpted))
-
-    @property
-    def get_encrypted_data(self):
-        return self.encryptDictionary
-
-
-class DecryptData:
-
-    def __init__(self, dictionary):
-        try:
-            cipher_hw_suite = Fernet(generate_key())
-            key = cipher_hw_suite.decrypt(bytes(dictionary.get('key')))
-            # key = bytes(dictionary.get('key'))
-            cipher_suite = Fernet(key)
-            decrypted = []
-            cipher_username = cipher_suite.decrypt(bytes(dictionary.get('username'), encoding='utf8'))
-            decrypted.append(cipher_username.decode("utf-8"))
-            cipher_password = cipher_suite.decrypt(bytes(dictionary.get('password'), encoding='utf8'))
-            decrypted.append(cipher_password.decode("utf-8"))
-            cipher_address = cipher_suite.decrypt(bytes(dictionary.get('address'), encoding='utf8'))
-            decrypted.append(cipher_address.decode("utf-8"))
-            cipher_root_password = cipher_suite.decrypt(bytes(dictionary.get('root_password'), encoding='utf8'))
-            decrypted.append(cipher_root_password.decode("utf-8"))
-            keys = ['username', 'password', 'address', 'root_password', 'key']
-            self.decrypt_dictionary = dict(zip(keys, decrypted))
-        except ImportError:
-            self.decrypt_dictionary = []
-            print("decryption failed")
-
-    def get_decrypted_data(self):
-        return self.decrypt_dictionary
-
-
-class PickleHandler:
-    @staticmethod
-    def save_obj(dictionary):
-        try:
-            f = open("file.pkl", "wb")
-            pickle.dump(dictionary, f)
-            f.close()
-            return True
-        except ImportError:
-            return False
-
-    @staticmethod
-    def load_obj(name):
-        try:
-            with open(name + '.pkl', 'rb') as f:
-                return pickle.load(f)
-        except ImportError:
-            print("load has some issues")
-
-
-def load_decrypt_pkl(file_name):
-    pkl = PickleHandler().load_obj(file_name)
-    if pkl is not None:
-        return DecryptData(pkl).get_decrypted_data()
-    else:
-        return False
-
-
-def encrypt_save_pkl(data):
-    try:
-        en = EncryptData(data)
-        cn = PickleHandler().save_obj(en.get_encrypted_data)
-        return True
-    except ImportError:
-        return False
-
-
 def set_connection_values(self, ):
     if not dialog.isVisible():
         dialog.show()
@@ -260,42 +164,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         main.activateWindow()
 
 
-def connection(address, root_pass, username, password, status):
-    if not status:
-        child = pexpect.spawn('sudo /usr/sbin/openconnect  ' + 'disconnect')
-        child.close(True)
-        child.expect("disconnect")
-        return
-    child = pexpect.spawn('sudo /usr/sbin/openconnect  ' + address, maxread=2000)
-    # child.logfile = sys.stdout.buffer
-
-    child.delaybeforesend = 1
-    child.sendline(root_pass)
-    child.sendline('yes')
-    child.sendline(username)
-    print("user name sent")
-    child.sendline(password)
-    print("password sent")
-    child.logfile = sys.stdout
-    child.expect(pexpect.EOF, timeout=None)
-
-
-def generate_key():
-    password = str(get_mac()).encode()
-    salt = "connector"
-    password_hash = argon2_hash(password=password, salt=salt)
-    return base64.urlsafe_b64encode(password_hash[:32])
-
-
-def connect_vpn(d_data):
-    try:
-        t2 = KThread(target=connection, args=(
-            d_data.get('address'), d_data.get('root_password'), d_data.get('username'), d_data.get('password'), True))
-        t2.start()
-    except ImportError:
-        print("cannot create connection")
-
-
 def get_black_pallet():
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
@@ -320,6 +188,7 @@ if __name__ == '__main__':
     dialog = InputDialog()
     main = MyWindow()
     main.center()
+
     if not os.path.isfile("file.pkl"):
         set_connection_values(main)
     else:
