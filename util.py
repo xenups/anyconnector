@@ -18,8 +18,7 @@ class PrivateKeyHandler:
     def save_private_key():
         try:
             generated_key_from_mac = generate_key()
-            private_key_dict = generated_key_from_mac
-            PickleHandler.save_obj(private_key_dict, 'prvkey.pkl')
+            PickleHandler.save_obj(generated_key_from_mac, 'prvkey.pkl')
         except ImportError:
             return False
 
