@@ -1,5 +1,5 @@
 A GUI tool for openconnect Linux
-newliney
+newline
 
 you can download executable file in release  
 
