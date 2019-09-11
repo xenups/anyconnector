@@ -1,6 +1,6 @@
 A GUI tool for openconnect Linux
 
-you can download executable file in release 
+you can download executable file in release  
 
 or 
 
