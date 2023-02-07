@@ -5,7 +5,7 @@ cached-property==1.5.1
 cffi==1.12.3
 chardet==3.0.4
 coloredlogs==10.0
-cryptography==2.7
+cryptography==39.0.1
 deb-pkg-tools==5.2
 executor==21.3
 fasteners==0.15
